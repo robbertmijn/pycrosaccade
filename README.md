@@ -16,8 +16,6 @@ from eyelinkparser import parse, defaulttraceprocessor
 
 # Parse data as usual
 dm = parse(
-    maxtracelen = 3000,
-    folder=folder,
     traceprocessor=defaulttraceprocessor(
       blinkreconstruct=True, 
       downsample=None, 
