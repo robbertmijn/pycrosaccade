@@ -1,10 +1,10 @@
-# micSaccer
+# pycrosaccade
 Detect microsaccades
 
 # Installation
 Clone repo into your preprocessing directory
 
-`> git clone https://github.com/robbertmijn/micSaccer`
+`> git clone https://github.com/robbertmijn/pycrosaccade`
 
 # Usage
 
@@ -13,7 +13,7 @@ Use in combination with https://github.com/smathot/python-eyelinkparser/tree/mas
 ## Preprocessing
 
 ``` { .python capture }
-from micSaccer import microsaccades
+from pycrosaccade import microsaccades
 from eyelinkparser import parse, defaulttraceprocessor
 
 # Parse data as usual
