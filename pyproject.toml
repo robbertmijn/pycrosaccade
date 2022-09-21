@@ -17,7 +17,7 @@ dependencies = [
     "numpy"
 ]
 [project.scripts]
-pycrosaccade = "pycrosaccade.__init__"
+pycrosaccade = "pycrosaccade"
 [project.urls]
 Documentation = "https://github.com/robbertmijn/pycrosaccade"
 Source = "https://github.com/robbertmijn/pycrosaccade"
