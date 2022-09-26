@@ -2,9 +2,9 @@
 Detect microsaccades
 
 # Installation
-Clone repo into your preprocessing directory
+Use pip install
 
-`> git clone https://github.com/robbertmijn/pycrosaccade`
+`> pip install pycrosaccade`
 
 # Usage
 
