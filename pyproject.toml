@@ -16,8 +16,6 @@ dependencies = [
     "python-datamatrix",
     "numpy"
 ]
-[project.scripts]
-pycrosaccade = "pycrosaccade"
 [project.urls]
 Documentation = "https://github.com/robbertmijn/pycrosaccade"
 Source = "https://github.com/robbertmijn/pycrosaccade"
