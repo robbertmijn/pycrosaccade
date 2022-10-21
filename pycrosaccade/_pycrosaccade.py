@@ -44,8 +44,8 @@ def find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
     saccdistlist = []
     
     # get number of samples for mindur and maxdur (depending on sampfreq)
-    mindur = int(mindur * 1000/sampfreq)
-    maxdur = int(maxdur * 1000/sampfreq)
+    mindur = max(1, int(mindur * sampfreq/1000))
+    maxdur = max(1, int(maxdur * sampfreq/1000))
     
     # calculate distance from one pair of xy samples to the next pair (i.e., velocity)
     vtrace = np.sqrt(np.square(srs.smooth(np.diff(xtrace), winlen = vel_smooth)) + 
