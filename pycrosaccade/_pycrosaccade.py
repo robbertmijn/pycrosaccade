@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Aug  4 16:30:18 2022
+Extract microsaccades
 
 @author: robbertmijn
 """
@@ -13,7 +13,7 @@ from datamatrix import (
 import numpy as np
 
 #%%
-def find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50, 
+def _find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50, 
                   mindist = .08, maxdist = 2, saccISI = 50, 
                   vel_smooth = 7, pix2degree = 1/34.6, sampfreq = 1000):
     
@@ -31,8 +31,7 @@ def find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
         mindist: minimum distance the gaze has to travel
         maxdist: maximum distance the gaze has to travel
         saccISI: At least this many samples must pass before a new microsaccade is considered
-        smooth_winlen: number of samples taken together to form moving average
-        vel_smooth: How many samples to smooth over gaze velocity
+        vel_smooth: How many ms to smooth over gaze velocity
         pix2degree: depending on distance to screen and resolution, how many pixels make up one degree visual angle
         sampfreq: sampling frequency
         
@@ -46,6 +45,8 @@ def find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
     # get number of samples for mindur and maxdur (depending on sampfreq)
     mindur = max(1, int(mindur * sampfreq/1000))
     maxdur = max(1, int(maxdur * sampfreq/1000))
+    vel_smooth = max(1, int(vel_smooth * sampfreq/1000))
+    dist_margin = max(1, int(5 * sampfreq/1000))
     
     # calculate distance from one pair of xy samples to the next pair (i.e., velocity)
     vtrace = np.sqrt(np.square(srs.smooth(np.diff(xtrace), winlen = vel_smooth)) + 
@@ -54,8 +55,8 @@ def find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
     # calculate raw threshold for current trial
     vt = np.nanmedian(np.absolute(vtrace - np.nanmedian(vtrace))) * msVthres
     
+    # find microsaccades in the velocity trace
     ifrom = 0
-    
     while ifrom < len(vtrace):
         
         # find first index where velocity exceeds threshold
@@ -77,9 +78,9 @@ def find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
             iend = l[0] + istart
         
         # determine distance between start and end of saccade
-        # use the median location 5 samples before and 5 samples after the saccade to calculate distance
-        saccdist = pix2degree * (np.sqrt(np.square(np.nanmedian(xtrace[istart - 5:istart]) - np.nanmedian(xtrace[iend:iend + 5])) + 
-                           np.square(np.nanmedian(ytrace[istart - 5:istart]) - np.nanmedian(ytrace[iend:iend + 5]))))
+        # use the median location 5 ms before and 5 ms after the saccade to calculate distance
+        saccdist = pix2degree * (np.sqrt(np.square(np.nanmedian(xtrace[istart - dist_margin:istart]) - np.nanmedian(xtrace[iend:iend + dist_margin])) + 
+                           np.square(np.nanmedian(ytrace[istart - dist_margin:istart]) - np.nanmedian(ytrace[iend:iend + dist_margin]))))
                 
         # append this saccade if duration and distance is within margins
         if l[0] > mindur and l[0] < maxdur and saccdist < maxdist and saccdist > mindist:
@@ -96,7 +97,7 @@ def find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
 def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50, 
                   mindist = .08, maxdist = 2, saccISI = 50, 
                   vel_smooth = 7, freq_smooth = 99, varname = "",
-                  pix2degree = 1/34.6):
+                  pix2degree = 1/34.6, sampfreq = None):
 
     """
     desc:
@@ -112,9 +113,12 @@ def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50,
     
     for phase in phases:
         
-        # extract sampling frequency from time
-        sampfreq = int(1000/(dm["ttrace_" + phase][0,1] - dm["ttrace_" + phase][0,0]))
-        
+        if sampfreq is None:
+            # extract sampling frequency from time
+            sampfreq = int(1000/(dm["ttrace_" + phase][0,1] - dm["ttrace_" + phase][0,0]))
+        else:
+            pass
+
         # create new columns start times, end times and distance
         dm[varname + "saccstlist_" + phase] = SeriesColumn(0)
         dm[varname + "saccetlist_" + phase] = SeriesColumn(0)
@@ -130,7 +134,7 @@ def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50,
         for i, row in enumerate(dm):
 
             # find microsaccades for each trial/phase, store start times, end times and distances
-            saccstlist, saccetlist, saccdistlist = find_microsaccades(row["xtrace_" + phase], 
+            saccstlist, saccetlist, saccdistlist = _find_microsaccades(row["xtrace_" + phase], 
                                                                       row["ytrace_" + phase], 
                                                                       msVthres = msVthres, mindur = mindur, maxdur = maxdur, 
                                                                       mindist = mindist, maxdist = maxdist, saccISI = saccISI, 
@@ -152,7 +156,9 @@ def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50,
             # create a trace with saccade frequency over time
             # set frequency to 1 at the onsets of saccades
             row[varname + "saccfreq_" + phase][list(map(int, saccstlist))] = 1
+            
             # smooth signal
+            freq_smooth = max(1, int(freq_smooth * sampfreq/1000))
             row[varname + "saccfreq_" + phase] = srs.smooth(row[varname + "saccfreq_" + phase], freq_smooth) * sampfreq
             
          
