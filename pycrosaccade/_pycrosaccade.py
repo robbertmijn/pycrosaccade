@@ -8,9 +8,16 @@ Extract microsaccades
 #%%
 from datamatrix import (
     series as srs,
-    SeriesColumn
+    SeriesColumn,
+    plot
     )
 import numpy as np
+from matplotlib import pyplot as plt
+plt.style.use('default')
+
+#%%
+def _round_to_odd(k):
+    return 2 * int(k/2) + 1
 
 #%%
 def _find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50, 
@@ -45,7 +52,7 @@ def _find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
     # get number of samples for mindur and maxdur (depending on sampfreq)
     mindur = max(1, int(mindur * sampfreq/1000))
     maxdur = max(1, int(maxdur * sampfreq/1000))
-    vel_smooth = max(1, int(vel_smooth * sampfreq/1000))
+    vel_smooth = max(1, _round_to_odd(vel_smooth * sampfreq/1000))
     dist_margin = max(1, int(5 * sampfreq/1000))
     
     # calculate distance from one pair of xy samples to the next pair (i.e., velocity)
@@ -96,7 +103,7 @@ def _find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
 #%%
 def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50, 
                   mindist = .08, maxdist = 2, saccISI = 50, 
-                  vel_smooth = 7, freq_smooth = 99, varname = "",
+                  vel_smooth = 7, freq_smooth = 100, varname = "",
                   pix2degree = 1/34.6, sampfreq = None):
 
     """
@@ -107,7 +114,7 @@ def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50,
         dm: DataMatrix containing data from the experiment
         
     """
-    
+        
     # extract the phases of the experiment from the dm
     phases = [c.replace("xtrace_", "") for c in dm.column_names if c.startswith("xtrace_")]
     
@@ -140,7 +147,7 @@ def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50,
                                                                       mindist = mindist, maxdist = maxdist, saccISI = saccISI, 
                                                                       vel_smooth = vel_smooth, pix2degree = pix2degree, sampfreq = sampfreq)
             
-            # update max depth if more saccades are sound than previously in this trial
+            # update max depth if more saccades are found than previously in this trial
             max_depth = max([max_depth, len(saccstlist)])
             
             if len(saccstlist) > dm[varname + "saccstlist_" + phase].depth:
@@ -158,7 +165,33 @@ def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50,
             row[varname + "saccfreq_" + phase][list(map(int, saccstlist))] = 1
             
             # smooth signal
-            freq_smooth = max(1, int(freq_smooth * sampfreq/1000))
+            freq_smooth = max(1, _round_to_odd(freq_smooth * sampfreq/1000))
             row[varname + "saccfreq_" + phase] = srs.smooth(row[varname + "saccfreq_" + phase], freq_smooth) * sampfreq
-            
-         
+        
+def plot_dist_dur(dm, phase, msVthres = 6, mindur = 9, maxdur = 50, 
+                 mindist = .08, maxdist = 2, saccISI = 50, 
+                 vel_smooth = 7, freq_smooth = 100, varname = "",
+                 pix2degree = 1/34.6, sampfreq = None, label = ""):
+
+    microsaccades(dm, msVthres, mindur, maxdur, 
+                      mindist, maxdist, saccISI, 
+                      vel_smooth, freq_smooth, varname,
+                      pix2degree, sampfreq)
+    
+    dm["saccdurlist_" + phase] = dm["saccetlist_" + phase] - dm["saccstlist_" + phase]
+    
+    dm_flat = dm["saccdistlist_" + phase, "saccdurlist_" + phase]
+    dm_flat = srs.flatten(dm_flat)
+    dm_flat = dm_flat["saccdistlist_" + phase] != np.nan
+    
+    plt.figure()
+    plt.scatter(dm_flat["saccdistlist_" + phase], dm_flat["saccdurlist_" + phase])
+    plt.title("{}, {} saccades".format(label, len(dm_flat)))
+    plt.xlabel("Distance (degree)")
+    plt.ylabel("Duration (ms)")
+    
+    plt.figure()
+    plot.trace(dm["saccfreq_" + phase])
+    plt.title("{}, {} saccades".format(label, len(dm_flat)))
+    plt.xlabel("Time since rsvp (ms)")
+    plt.ylabel("Microsaccades (Hz)")
