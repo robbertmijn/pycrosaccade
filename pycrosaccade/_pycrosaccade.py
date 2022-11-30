@@ -125,6 +125,8 @@ def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50,
             sampfreq = int(1000/(dm["ttrace_" + phase][0,1] - dm["ttrace_" + phase][0,0]))
         else:
             pass
+        
+        freq_smooth_samps = max(1, _round_to_odd(freq_smooth * sampfreq/1000))
 
         # create new columns start times, end times and distance
         dm[varname + "saccstlist_" + phase] = SeriesColumn(0)
@@ -165,8 +167,7 @@ def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50,
             row[varname + "saccfreq_" + phase][list(map(int, saccstlist))] = 1
             
             # smooth signal
-            freq_smooth = max(1, _round_to_odd(freq_smooth * sampfreq/1000))
-            row[varname + "saccfreq_" + phase] = srs.smooth(row[varname + "saccfreq_" + phase], freq_smooth) * sampfreq
+            row[varname + "saccfreq_" + phase] = srs.smooth(row[varname + "saccfreq_" + phase], freq_smooth_samps) * sampfreq
         
 def plot_dist_dur(dm, phase, msVthres = 6, mindur = 9, maxdur = 50, 
                  mindist = .08, maxdist = 2, saccISI = 50, 
