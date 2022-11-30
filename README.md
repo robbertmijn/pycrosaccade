@@ -194,3 +194,8 @@ __Out:__
 # Parameters
 
 TODO (but see functions)
+
+# References
+
+- Engbert, R., & Kliegl, R. (2003). Microsaccades uncover the orientation of covert attention. Vision Research, 43(9), 1035–1045. https://doi.org/10.1016/S0042-6989(03)00084-1
+- Liu, B., Nobre, A. C., & Ede, F. van. (2021). Functional but not obligatory link between microsaccades and neural modulation by covert spatial attention. bioRxiv. https://doi.org/10.1101/2021.11.10.468033
