@@ -1,11 +1,19 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
 cff-version: 1.2.0
-message: If you use this software, please cite it using these metadata.
 title: pycrosaccade
-abstract: Detect microsaccades
+message: >-
+  If you use this software, please cite it using these
+  metadata.
+type: software
 authors:
-  - family-names: van der Mijn
+  - family-names: Mijn
     given-names: Robbert
-    orcid: "https://orcid.org/0000-0002-5312-2613"
+    orcid: 'https://orcid.org/0000-0002-5312-2613'
+    name-particle: van der
+    email: robbertmijn@gmail.com
+repository-code: 'https://github.com/robbertmijn/pycrosaccade'
+abstract: Detect microsaccades
 version: 0.4.2
-date-released: "2023-02-01"
-repository-code: "https://github.com/robbertmijn/pycrosaccade"
+date-released: '2023-02-01'
