@@ -20,7 +20,7 @@ def _round_to_odd(k):
     return 2 * int(k/2) + 1
 
 #%%
-def _find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50, 
+def _find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
                   mindist = .08, maxdist = 2, saccISI = 50, 
                   vel_smooth = 7, pix2degree = 1/34.6, sampfreq = 1000):
     
@@ -48,6 +48,7 @@ def _find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
     saccstlist = []
     saccetlist = []
     saccdistlist = []
+    saccpvlist = []
     
     # get number of samples for mindur and maxdur (depending on sampfreq)
     mindur = max(1, int(mindur * sampfreq/1000))
@@ -55,19 +56,21 @@ def _find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
     vel_smooth = max(1, _round_to_odd(vel_smooth * sampfreq/1000))
     dist_margin = max(1, int(5 * sampfreq/1000))
     
-    # calculate distance from one pair of xy samples to the next pair (i.e., velocity)
-    vtrace = np.sqrt(np.square(srs.smooth(np.diff(xtrace), winlen = vel_smooth)) + 
-                     np.square(srs.smooth(np.diff(ytrace), winlen = vel_smooth)))
+    # calculate distance from one pair of xy samples to the next pair
+    vtrace = np.sqrt(np.square(np.diff(xtrace)) + np.square(np.diff(ytrace)))
+    
+    # calculate the velocity for each time point, and smooth the velocity with a slide window
+    vstrace = srs.smooth(vtrace * sampfreq, winlen = vel_smooth)
     
     # calculate raw threshold for current trial
-    vt = np.nanmedian(np.absolute(vtrace - np.nanmedian(vtrace))) * msVthres
+    vt = np.nanmedian(vstrace) * msVthres
     
     # find microsaccades in the velocity trace
     ifrom = 0
-    while ifrom < len(vtrace):
+    while ifrom < len(vstrace):
         
         # find first index where velocity exceeds threshold
-        l = np.where(vtrace[ifrom:] > vt)[0]
+        l = np.where(vstrace[ifrom:] > vt)[0]
         if len(l) == 0:
             break
         istart = l[0] + ifrom
@@ -76,7 +79,7 @@ def _find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
             break
         
         # find how many samples passed until velocity drops beneath threshold
-        l = np.where(vtrace[istart:] < vt)[0]
+        l = np.where(vstrace[istart:] < vt)[0]
         
         if len(l) == 0:
             # iend = len(vtrace)
@@ -88,17 +91,21 @@ def _find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
         # use the median location 5 ms before and 5 ms after the saccade to calculate distance
         saccdist = pix2degree * (np.sqrt(np.square(np.nanmedian(xtrace[istart - dist_margin:istart]) - np.nanmedian(xtrace[iend:iend + dist_margin])) + 
                            np.square(np.nanmedian(ytrace[istart - dist_margin:istart]) - np.nanmedian(ytrace[iend:iend + dist_margin]))))
-                
+        
+        # determine peak velocity between start and end of saccade
+        saccpv = pix2degree * np.nanmax(vstrace[istart:iend])
+        
         # append this saccade if duration and distance is within margins
         if l[0] > mindur and l[0] < maxdur and saccdist < maxdist and saccdist > mindist:
             saccstlist.append(istart)
             saccetlist.append(iend)
             saccdistlist.append(saccdist)
+            saccpvlist.append(saccpv)
             ifrom = iend + saccISI
         else:
             ifrom = iend
     
-    return np.array(saccstlist, dtype = float), np.array(saccetlist, dtype = float), np.array(saccdistlist, dtype = float)
+    return np.array(saccstlist, dtype = float), np.array(saccetlist, dtype = float), np.array(saccdistlist, dtype = float), np.array(saccpvlist, dtype=float)
 
 #%%
 def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50, 
@@ -132,6 +139,7 @@ def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50,
         dm[varname + "saccstlist_" + phase] = SeriesColumn(0)
         dm[varname + "saccetlist_" + phase] = SeriesColumn(0)
         dm[varname + "saccdistlist_" + phase] = SeriesColumn(0)
+        dm[varname + "saccpvlist_" + phase] = SeriesColumn(0)
         
         # create new column for saccade frequency over time (list of zeros to start with)
         dm[varname + "saccfreq_" + phase] = SeriesColumn(depth = dm["xtrace_" + phase].depth)
@@ -156,11 +164,13 @@ def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50,
                 dm[varname + "saccstlist_" + phase].depth = len(saccstlist)
                 dm[varname + "saccetlist_" + phase].depth = len(saccetlist)
                 dm[varname + "saccdistlist_" + phase].depth = len(saccdistlist)
- 
+                dm[varname + "saccpvlist_" + phase].depth = len(saccpvlist)
+                
             # store lists in dm
             row[varname + "saccstlist_" + phase][:len(saccstlist)] = saccstlist
             row[varname + "saccetlist_" + phase][:len(saccetlist)] = saccetlist
             row[varname + "saccdistlist_" + phase][:len(saccdistlist)] = saccdistlist
+            row[varname + "saccpvlist_" + phase][:len(saccpvlist)] = saccpvlist            
             
             # create a trace with saccade frequency over time
             # set frequency to 1 at the onsets of saccades
@@ -169,7 +179,7 @@ def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50,
             # smooth signal
             row[varname + "saccfreq_" + phase] = srs.smooth(row[varname + "saccfreq_" + phase], freq_smooth_samps) * sampfreq
         
-def plot_dist_dur(dm, phase, msVthres = 6, mindur = 9, maxdur = 50, 
+def plot_dist_dur(dm, msVthres = 6, mindur = 9, maxdur = 50, 
                  mindist = .08, maxdist = 2, saccISI = 50, 
                  vel_smooth = 7, freq_smooth = 100, varname = "",
                  pix2degree = 1/34.6, sampfreq = None, label = ""):
@@ -179,20 +189,33 @@ def plot_dist_dur(dm, phase, msVthres = 6, mindur = 9, maxdur = 50,
                       vel_smooth, freq_smooth, varname,
                       pix2degree, sampfreq)
     
-    dm["saccdurlist_" + phase] = dm["saccetlist_" + phase] - dm["saccstlist_" + phase]
-    
-    dm_flat = dm["saccdistlist_" + phase, "saccdurlist_" + phase]
-    dm_flat = srs.flatten(dm_flat)
-    dm_flat = dm_flat["saccdistlist_" + phase] != np.nan
-    
-    plt.figure()
-    plt.scatter(dm_flat["saccdistlist_" + phase], dm_flat["saccdurlist_" + phase])
-    plt.title("{}, {} saccades".format(label, len(dm_flat)))
-    plt.xlabel("Distance (degree)")
-    plt.ylabel("Duration (ms)")
-    
-    plt.figure()
-    plot.trace(dm["saccfreq_" + phase])
-    plt.title("{}, {} saccades".format(label, len(dm_flat)))
-    plt.xlabel("Time since rsvp (ms)")
-    plt.ylabel("Microsaccades (Hz)")
+    phases = [c.replace("ttrace_", "") for c in dm.column_names if c.startswith("ttrace_")]
+
+    for phase in phases:
+        
+        dm[varname + "saccdurlist_" + phase] = dm[varname + "saccetlist_" + phase] - dm[varname + "saccstlist_" + phase]
+        dm_distdur = dm[varname + "saccdistlist_" + phase, varname + "saccdurlist_" + phase]
+        dm_distdur = srs.flatten(dm_distdur)
+        dm_distdur = dm_distdur["saccdistlist_" + phase] != np.nan
+        
+        dm_pvdist = dm[varname + "saccpvlist_" + phase, varname + "saccdistlist_" + phase]
+        dm_pvdist = srs.flatten(dm_pvdist)
+        dm_pvdist = dm_pvdist[varname + "saccdistlist_" + phase] != np.nan
+        
+        plt.figure()
+        plt.scatter(dm_distdur[varname + "saccdurlist_" + phase], dm_distdur[varname + "saccdistlist_" + phase])
+        plt.title("{} times threshold, {} saccades".format(varname, len(dm_distdur)))
+        plt.xlabel("Duration (ms)")
+        plt.ylabel("Distance (degree)")
+        
+        plt.figure()
+        plt.scatter(dm_pvdist[varname + "saccdistlist_" + phase], dm_pvdist[varname + "saccpvlist_" + phase])
+        plt.title("{} times threshold, {} saccades".format(varname, len(dm_pvdist)))
+        plt.xlabel("Distance (degree)")
+        plt.ylabel("Peak velocity (degree/s)")
+        
+        plt.figure()
+        plot.trace(dm[varname + "saccfreq_" + phase])
+        plt.title("{} times threshold, {} saccades".format(varname, len(dm_distdur)))
+        plt.xlabel("Time since rsvp (ms)")
+        plt.ylabel("Microsaccades (Hz)")
