@@ -20,14 +20,16 @@ def _round_to_odd(k):
     return 2 * int(k/2) + 1
 
 #%%
-def _find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
-                  mindist = .08, maxdist = 2, saccISI = 50, 
-                  vel_smooth = 7, pix2degree = 1/34.6, sampfreq = 1000):
+def _find_microsaccades(xtrace, ytrace, msVthres=6, mindur=9, maxdur=50,
+                  mindist=.08, maxdist=2, saccISI=50, 
+                  vel_smooth=7, pix2degree=1/34.6, sampfreq=1000):
     
     """
     desc:
         Get microsaccades for a trace of x and y coordinates for a single trial
         Returns three lists with respectively first sample, last sample and the distance travelled during the microsaccade.
+
+    NOTE: default settings need updating!
         
     arguments:
         xtrace: SeriesColumn with x coordinates
@@ -56,21 +58,18 @@ def _find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
     vel_smooth = max(1, _round_to_odd(vel_smooth * sampfreq/1000))
     dist_margin = max(1, int(5 * sampfreq/1000))
     
-    # calculate distance from one pair of xy samples to the next pair
-    vtrace = np.sqrt(np.square(np.diff(xtrace)) + np.square(np.diff(ytrace)))
+    # calculate distance from one pair of xy samples to the next pair. Smooth it over 7 samples (default).
+    vtrace = srs.smooth(np.sqrt(np.square(np.diff(xtrace)) + np.square(np.diff(ytrace))), winlen = vel_smooth)
     
-    # calculate the velocity for each time point, and smooth the velocity with a slide window
-    vstrace = srs.smooth(vtrace * sampfreq, winlen = vel_smooth)
-    
-    # calculate raw threshold for current trial
-    vt = np.nanmedian(vstrace) * msVthres
+    # calculate threshold for current trial
+    vt = np.nanmedian(vtrace) * msVthres
     
     # find microsaccades in the velocity trace
     ifrom = 0
-    while ifrom < len(vstrace):
+    while ifrom < len(vtrace):
         
         # find first index where velocity exceeds threshold
-        l = np.where(vstrace[ifrom:] > vt)[0]
+        l = np.where(vtrace[ifrom:] > vt)[0]
         if len(l) == 0:
             break
         istart = l[0] + ifrom
@@ -79,7 +78,7 @@ def _find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
             break
         
         # find how many samples passed until velocity drops beneath threshold
-        l = np.where(vstrace[istart:] < vt)[0]
+        l = np.where(vtrace[istart:] < vt)[0]
         
         if len(l) == 0:
             # iend = len(vtrace)
@@ -87,13 +86,11 @@ def _find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
         else:
             iend = l[0] + istart
         
-        # determine distance between start and end of saccade
-        # use the median location 5 ms before and 5 ms after the saccade to calculate distance
-        saccdist = pix2degree * (np.sqrt(np.square(np.nanmedian(xtrace[istart - dist_margin:istart]) - np.nanmedian(xtrace[iend:iend + dist_margin])) + 
-                           np.square(np.nanmedian(ytrace[istart - dist_margin:istart]) - np.nanmedian(ytrace[iend:iend + dist_margin]))))
+        # determine distance travelled between start and end of saccade
+        saccdist = vtrace[istart:iend].sum()
         
         # determine peak velocity between start and end of saccade
-        saccpv = pix2degree * np.nanmax(vstrace[istart:iend])
+        saccpv = pix2degree * np.nanmax(vtrace[istart:iend])
         
         # append this saccade if duration and distance is within margins
         if l[0] > mindur and l[0] < maxdur and saccdist < maxdist and saccdist > mindist:
@@ -108,10 +105,10 @@ def _find_microsaccades(xtrace, ytrace, msVthres = 6, mindur = 9, maxdur = 50,
     return np.array(saccstlist, dtype = float), np.array(saccetlist, dtype = float), np.array(saccdistlist, dtype = float), np.array(saccpvlist, dtype=float)
 
 #%%
-def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50, 
-                  mindist = .08, maxdist = 2, saccISI = 50, 
-                  vel_smooth = 7, freq_smooth = 100, varname = "",
-                  pix2degree = 1/34.6, sampfreq = None):
+def microsaccades(dm, msVthres=6, mindur=9, maxdur=50, 
+                  mindist=.08, maxdist=2, saccISI=50, 
+                  vel_smooth=7, freq_smooth=100, varname="",
+                  pix2degree=1/34.6, sampfreq=None):
 
     """
     desc:
@@ -151,11 +148,11 @@ def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50,
         for i, row in enumerate(dm):
 
             # find microsaccades for each trial/phase, store start times, end times and distances
-            saccstlist, saccetlist, saccdistlist = _find_microsaccades(row["xtrace_" + phase], 
+            saccstlist, saccetlist, saccdistlist, saccpvlist = _find_microsaccades(row["xtrace_" + phase], 
                                                                       row["ytrace_" + phase], 
-                                                                      msVthres = msVthres, mindur = mindur, maxdur = maxdur, 
-                                                                      mindist = mindist, maxdist = maxdist, saccISI = saccISI, 
-                                                                      vel_smooth = vel_smooth, pix2degree = pix2degree, sampfreq = sampfreq)
+                                                                      msVthres=msVthres, mindur=mindur, maxdur=maxdur, 
+                                                                      mindist=mindist, maxdist=maxdist, saccISI=saccISI, 
+                                                                      vel_smooth=vel_smooth, pix2degree=pix2degree, sampfreq=sampfreq)
             
             # update max depth if more saccades are found than previously in this trial
             max_depth = max([max_depth, len(saccstlist)])
@@ -179,43 +176,32 @@ def microsaccades(dm, msVthres = 6, mindur = 9, maxdur = 50,
             # smooth signal
             row[varname + "saccfreq_" + phase] = srs.smooth(row[varname + "saccfreq_" + phase], freq_smooth_samps) * sampfreq
         
-def plot_dist_dur(dm, msVthres = 6, mindur = 9, maxdur = 50, 
-                 mindist = .08, maxdist = 2, saccISI = 50, 
-                 vel_smooth = 7, freq_smooth = 100, varname = "",
-                 pix2degree = 1/34.6, sampfreq = None, label = ""):
-
-    microsaccades(dm, msVthres, mindur, maxdur, 
-                      mindist, maxdist, saccISI, 
-                      vel_smooth, freq_smooth, varname,
-                      pix2degree, sampfreq)
+def plot_dist_dur(dm, phase, varname=""):
     
-    phases = [c.replace("ttrace_", "") for c in dm.column_names if c.startswith("ttrace_")]
+    sampfreq = int(1000/(dm["ttrace_" + phase][0,1] - dm["ttrace_" + phase][0,0]))
 
-    for phase in phases:
-        
-        dm[varname + "saccdurlist_" + phase] = dm[varname + "saccetlist_" + phase] - dm[varname + "saccstlist_" + phase]
-        dm_distdur = dm[varname + "saccdistlist_" + phase, varname + "saccdurlist_" + phase]
-        dm_distdur = srs.flatten(dm_distdur)
-        dm_distdur = dm_distdur["saccdistlist_" + phase] != np.nan
-        
-        dm_pvdist = dm[varname + "saccpvlist_" + phase, varname + "saccdistlist_" + phase]
-        dm_pvdist = srs.flatten(dm_pvdist)
-        dm_pvdist = dm_pvdist[varname + "saccdistlist_" + phase] != np.nan
-        
-        plt.figure()
-        plt.scatter(dm_distdur[varname + "saccdurlist_" + phase], dm_distdur[varname + "saccdistlist_" + phase])
-        plt.title("{} times threshold, {} saccades".format(varname, len(dm_distdur)))
-        plt.xlabel("Duration (ms)")
-        plt.ylabel("Distance (degree)")
-        
-        plt.figure()
-        plt.scatter(dm_pvdist[varname + "saccdistlist_" + phase], dm_pvdist[varname + "saccpvlist_" + phase])
-        plt.title("{} times threshold, {} saccades".format(varname, len(dm_pvdist)))
-        plt.xlabel("Distance (degree)")
-        plt.ylabel("Peak velocity (degree/s)")
-        
-        plt.figure()
-        plot.trace(dm[varname + "saccfreq_" + phase])
-        plt.title("{} times threshold, {} saccades".format(varname, len(dm_distdur)))
-        plt.xlabel("Time since rsvp (ms)")
-        plt.ylabel("Microsaccades (Hz)")
+    dm[varname + "saccdurlist_" + phase] = dm[varname + "saccetlist_" + phase] - dm[varname + "saccstlist_" + phase]
+    dm_distdur = dm[varname + "saccdistlist_" + phase, varname + "saccdurlist_" + phase]
+    dm_distdur = srs.flatten(dm_distdur)
+    dm_distdur = dm_distdur["saccdistlist_" + phase] != np.nan
+    
+    dm_pvdist = dm[varname + "saccpvlist_" + phase, varname + "saccdistlist_" + phase]
+    dm_pvdist = srs.flatten(dm_pvdist)
+    dm_pvdist = dm_pvdist[varname + "saccdistlist_" + phase] != np.nan
+    
+    fig, axs = plt.subplots(2, 2, constrained_layout=True)
+    fig.suptitle(f"{len(dm_distdur)/len(dm)} saccades per phase")
+
+    axs[0,0].scatter(dm_distdur[varname + "saccdurlist_" + phase], dm_distdur[varname + "saccdistlist_" + phase])
+    axs[0,0].set_xlabel("Duration (ms)")
+    axs[0,0].set_ylabel("Distance (px)")
+    
+    axs[0,1].scatter(dm_pvdist[varname + "saccdistlist_" + phase], dm_pvdist[varname + "saccpvlist_" + phase])
+    axs[0,1].title("{} times threshold, {} saccades".format(varname, len(dm_pvdist)))
+    axs[0,1].set_xlabel("Distance (degree)")
+    axs[0,1].set_xlabel("Peak velocity (degree/s)")
+    
+    saccfreq = dm[varname + "saccfreq_" + phase].mean()
+    axs[1,0].plot(saccfreq)
+    axs[1,0].set_xlabel("Time (ms)")
+    axs[1,0].set_ylabel("Microsaccades (Hz)")
