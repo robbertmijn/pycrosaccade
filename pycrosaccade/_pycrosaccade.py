@@ -87,7 +87,7 @@ def _find_microsaccades(xtrace, ytrace, msVthres=6, mindur=9, maxdur=50,
             iend = l[0] + istart
         
         # determine distance travelled between start and end of saccade
-        saccdist = vtrace[istart:iend].sum()
+        saccdist = pix2degree * vtrace[istart:iend].sum()
         
         # determine peak velocity between start and end of saccade
         saccpv = pix2degree * np.nanmax(vtrace[istart:iend])
