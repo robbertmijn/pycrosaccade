@@ -15,5 +15,5 @@ authors:
     email: robbertmijn@gmail.com
 repository-code: 'https://github.com/robbertmijn/pycrosaccade'
 abstract: Detect microsaccades
-version: 0.4.2
+version: 0.5.0
 date-released: '2023-02-01'

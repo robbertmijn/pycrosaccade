@@ -28,9 +28,9 @@ dm = parse(
 
 ## Microsaccades
 
-``` { .python capture}
-# for each phase in the experiment, add 4 columns (saccetlist_phase, saccstlist_phase, saccfistlist_phase, saccfreq_phase)
+For each phase in the experiment, add 5 columns (`saccetlist_phase`, `saccstlist_phase`, `saccdurlist_phase`, `saccdistlist_phase`, `saccfreq_phase`)
 
+``` { .python capture}
 microsaccades(dm)
 
 print(dm.saccstlist_fixation)
@@ -43,6 +43,15 @@ from datamatrix import plot
 plot.trace(dm.saccfreq_fixation)
 ```
 
+To compare the results with different parameters, use `ms_diagnostics`
+
+``` { .python capture }
+microsaccades(dm, varname='default')
+microsaccades(dm, varname='thres3', msVthres=3)
+
+ms_diagnostics(dm, phase='fixation', varname='default')
+ms_diagnostics(dm, phase='fixation', varname='thres3')
+```
 
 # Parameters
 
