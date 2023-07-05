@@ -13,7 +13,7 @@ Use in combination with https://github.com/smathot/python-eyelinkparser/tree/mas
 ## Preprocessing
 
 ``` { .python capture }
-from pycrosaccade import microsaccades
+from pycrosaccade import microsaccades, ms_diagnostics
 from eyelinkparser import parse, defaulttraceprocessor
 
 # Parse data as usual

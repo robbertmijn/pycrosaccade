@@ -5,7 +5,7 @@ Extract microsaccades
 
 @author: robbertmijn
 """
-#%%
+
 from datamatrix import (
     series as srs,
     SeriesColumn,
@@ -15,11 +15,11 @@ import numpy as np
 from matplotlib import pyplot as plt
 plt.style.use('default')
 
-#%%
+
 def _round_to_odd(k):
     return 2 * int(k/2) + 1
 
-#%%
+
 def _find_microsaccades(xtrace, ytrace, msVthres=6, mindur=3, maxdur=float('inf'), 
                   mindist=0.057, maxdist=float('inf'), saccISI=100, 
                   vel_smooth=5, pix2degree=1/34.6, sampfreq=1000):
@@ -102,7 +102,7 @@ def _find_microsaccades(xtrace, ytrace, msVthres=6, mindur=3, maxdur=float('inf'
         saccdist = pix2degree * vtrace[istart:iend].sum()
         
         # determine peak velocity between start and end of saccade
-        saccpv = pix2degree * np.nanmax(vtrace[istart:iend])
+        saccpv = pix2degree * np.nanmax(vtrace[istart:iend]) 
         
         # append this saccade if duration and distance is within margins
         if l[0] > mindur and l[0] < maxdur and saccdist < maxdist and saccdist > mindist:
@@ -117,7 +117,7 @@ def _find_microsaccades(xtrace, ytrace, msVthres=6, mindur=3, maxdur=float('inf'
     
     return np.array(saccstlist, dtype=int), np.array(saccetlist, dtype=int), np.array(saccdurlist, dtype=int), np.array(saccdistlist, dtype=float), np.array(saccpvlist, dtype=float)
 
-#%%
+
 def microsaccades(dm, msVthres=6, mindur=3, maxdur=float('inf'), 
                   mindist=0.057, maxdist=float('inf'), saccISI=100, 
                   vel_smooth=5, varname="", pix2degree=1/34.6, sampfreq=None, freq_smooth=100):
@@ -193,7 +193,7 @@ def microsaccades(dm, msVthres=6, mindur=3, maxdur=float('inf'),
             row[varname + "saccfreq_" + phase] = srs.smooth(row[varname + "saccfreq_" + phase], freq_smooth_samps) * sampfreq
 
 
-def plot_dist_dur(dm, phase, varname=""):
+def ms_diagnostics(dm, phase, varname=""):
     
     sampfreq = int(1000/(dm["ttrace_" + phase][0,1] - dm["ttrace_" + phase][0,0]))
 
