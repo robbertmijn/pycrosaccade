@@ -13,7 +13,7 @@ Use in combination with https://github.com/smathot/python-eyelinkparser/tree/mas
 ## Preprocessing
 
 ``` { .python capture }
-from pycrosaccade import microsaccades
+from pycrosaccade import microsaccades, ms_diagnostics
 from eyelinkparser import parse, defaulttraceprocessor
 
 # Parse data as usual
@@ -29,14 +29,14 @@ dm = parse(
 __Out:__
 
 ```
-....................................................................................................................................
+data/sub_1.asc............................................data/sub_2.asc............................................data/sub_3.asc............................................
 ```
 
 ## Microsaccades
 
-``` { .python capture}
-# for each phase in the experiment, add 4 columns (saccetlist_phase, saccstlist_phase, saccfistlist_phase, saccfreq_phase)
+For each phase in the experiment, add 5 columns (`saccetlist_phase`, `saccstlist_phase`, `saccdurlist_phase`, `saccdistlist_phase`, `saccfreq_phase`)
 
+``` { .python capture}
 microsaccades(dm)
 
 print(dm.saccstlist_fixation)
@@ -45,151 +45,199 @@ print(dm.saccstlist_fixation)
 __Out:__
 
 ```
-col[[  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [2198.   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [ 434.   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [1280.   nan   nan   nan   nan   nan]
- [ 363.  618.  843.   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [1004.   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  88.   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [ 263.   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [ 678. 1382.   nan   nan   nan   nan]
- [  87.   nan   nan   nan   nan   nan]
- [ 667.   nan   nan   nan   nan   nan]
- [1024.   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [ 608.   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [1228. 1995.   nan   nan   nan   nan]
- [ 301.   nan   nan   nan   nan   nan]
- [1030. 1193.   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [ 728.   nan   nan   nan   nan   nan]
- [  93.  256.   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  37.   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [2132.   nan   nan   nan   nan   nan]
- [1719.   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [ 190.  813. 2124.   nan   nan   nan]
- [  33.   nan   nan   nan   nan   nan]
- [ 415.  780.  898. 1933. 2357.   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [ 252.  434.  875. 1052.   nan   nan]
- [ 660. 1207. 2476.   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  21. 1487.   nan   nan   nan   nan]
- [ 207.  394.  625.   nan   nan   nan]
- [ 116.  549. 1231. 1378.   nan   nan]
- [1265. 1443.   nan   nan   nan   nan]
- [1395.   nan   nan   nan   nan   nan]
- [  97.  270.  686. 1182.   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [ 138.  337.  775. 2131.   nan   nan]
- [ 299.  722.  914. 2216.   nan   nan]
- [ 486. 1366.   nan   nan   nan   nan]
- [ 404.  549.   nan   nan   nan   nan]
- [ 615.   nan   nan   nan   nan   nan]
- [ 312.  617. 1387. 1861.   nan   nan]
- [ 163.   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [ 863. 1019.   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [ 104.   nan   nan   nan   nan   nan]
- [ 459.   nan   nan   nan   nan   nan]
- [ 268.  957. 1114.   nan   nan   nan]
- [ 348.  472.   nan   nan   nan   nan]
- [ 201.  351. 1048. 1842. 2485.   nan]
- [1038. 1907. 2132.   nan   nan   nan]
- [ 157.   nan   nan   nan   nan   nan]
- [ 625.  915. 1050.   nan   nan   nan]
- [ 262.  722. 1285. 1585.   nan   nan]
- [  50.  603. 1515. 1936. 2113.   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]
- [  68.  263. 1016. 1171. 1685. 2413.]
- [  nan   nan   nan   nan   nan   nan]
- [ 619.   nan   nan   nan   nan   nan]
- [  nan   nan   nan   nan   nan   nan]]
+Calculating microsaccades in phase "baseline"
+Calculating microsaccades in phase "feedback"
+Calculating microsaccades in phase "fixation"
+Calculating microsaccades in phase "problem"
+Calculating microsaccades in phase "response"
+col[[  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [1101.   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [ 487.   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [ 399.  590.   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [ 613.   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [1378.   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [1036.   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [ 194.   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [ 785.  898. 1056. 1191. 2360.]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [ 884. 1068.   nan   nan   nan]
+ [ 663.   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [ 209.   nan   nan   nan   nan]
+ [1237.   nan   nan   nan   nan]
+ [1268.   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [ 275.   nan   nan   nan   nan]
+ [1066. 1552.   nan   nan   nan]
+ [ 143.  779.   nan   nan   nan]
+ [ 705.   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [ 569.  792. 1396.   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  16.   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  91.  609.  738. 1633. 2209.]
+ [ 385.   nan   nan   nan   nan]
+ [1558.   nan   nan   nan   nan]
+ [ 474.  715.   nan   nan   nan]
+ [ 354.  926.   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [ 629. 1065.   nan   nan   nan]
+ [1291. 1590.   nan   nan   nan]
+ [  55.  608.  862. 1088. 1940.]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [ 478. 1020. 1177. 2420.   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]
+ [  nan   nan   nan   nan   nan]]
 ```
 
 # Visualisation
 
 ``` { .python capture }
-from datamatrix import plot
-plot.trace(dm.saccfreq_fixation)
+from matplotlib import pyplot as plt
+fig, ax = plt.subplots()
+ax.plot(dm.saccfreq_fixation.mean)
+fig.savefig('plot.png')
 ```
-
 
 __Out:__
 
+```
+
+```
+
 ![alt text](https://github.com/robbertmijn/micSaccer/blob/main/plot.png?raw=true)
+
+To compare the results with different parameters, use `ms_diagnostics`
+
+``` { .python capture }
+microsaccades(dm, varname='default')
+microsaccades(dm, varname='thres3', msVthres=3)
+```
+
+__Out:__
+
+```
+Calculating microsaccades in phase "baseline"
+Calculating microsaccades in phase "feedback"
+Calculating microsaccades in phase "fixation"
+Calculating microsaccades in phase "problem"
+Calculating microsaccades in phase "response"
+Calculating microsaccades in phase "baseline"
+Calculating microsaccades in phase "feedback"
+Calculating microsaccades in phase "fixation"
+Calculating microsaccades in phase "problem"
+Calculating microsaccades in phase "response"
+```
+
+``` { .python capture }
+fig, axs = ms_diagnostics(dm, phase='fixation', varname='default')
+fig.savefig('defaults.png')
+fig, axs = ms_diagnostics(dm, phase='fixation', varname='thres3')
+fig.savefig('thres3.png')
+```
+
+__Out:__
+
+```
+
+```
+
+![alt text](https://github.com/robbertmijn/micSaccer/blob/main/defaults.png?raw=true)
+![alt text](https://github.com/robbertmijn/micSaccer/blob/main/thres3.png?raw=true)
 
 # Parameters
 

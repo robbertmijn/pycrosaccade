@@ -39,19 +39,30 @@ print(dm.saccstlist_fixation)
 # Visualisation
 
 ``` { .python capture }
-from datamatrix import plot
-plot.trace(dm.saccfreq_fixation)
+from matplotlib import pyplot as plt
+fig, ax = plt.subplots()
+ax.plot(dm.saccfreq_fixation.mean)
+fig.savefig('plot.png')
 ```
+
+![alt text](https://github.com/robbertmijn/micSaccer/blob/main/plot.png?raw=true)
 
 To compare the results with different parameters, use `ms_diagnostics`
 
 ``` { .python capture }
 microsaccades(dm, varname='default')
 microsaccades(dm, varname='thres3', msVthres=3)
-
-ms_diagnostics(dm, phase='fixation', varname='default')
-ms_diagnostics(dm, phase='fixation', varname='thres3')
 ```
+
+``` { .python capture }
+fig, axs = ms_diagnostics(dm, phase='fixation', varname='default')
+fig.savefig('defaults.png')
+fig, axs = ms_diagnostics(dm, phase='fixation', varname='thres3')
+fig.savefig('thres3.png')
+```
+
+![alt text](https://github.com/robbertmijn/micSaccer/blob/main/defaults.png?raw=true)
+![alt text](https://github.com/robbertmijn/micSaccer/blob/main/thres3.png?raw=true)
 
 # Parameters
 

@@ -216,3 +216,5 @@ def ms_diagnostics(dm, phase, varname=""):
     axs[1,0].plot(saccfreq)
     axs[1,0].set_xlabel("Time (ms)")
     axs[1,0].set_ylabel("Microsaccades (Hz)")
+
+    return fig, axs
